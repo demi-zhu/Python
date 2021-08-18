@@ -1,3 +1,5 @@
+#若该键盘鼠标的操作被检测到了，可以使用pip install pywinio模块，制作驱动级别的键鼠模拟
+
 from ctypes import windll, byref, c_ubyte
 from ctypes.wintypes import RECT, HWND
 import numpy as np
@@ -71,3 +73,5 @@ if __name__ == "__main__":
     cv2.rectangle(image, top_left, bottom_right, (0,0,255), 2)
     cv2.imshow('Match Template', image)
     cv2.waitKey()
+
+
