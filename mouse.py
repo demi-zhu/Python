@@ -2,7 +2,7 @@ from ctypes import windll, byref
 from ctypes.wintypes import HWND, POINT
 import time
 
-PostMessageW = windll.user32.PostMessageW
+Mouse_Event = windll.user32.mouse_event
 ClientToScreen = windll.user32.ClientToScreen
 
 WM_MOUSEMOVE = 0x0200
@@ -10,104 +10,47 @@ WM_LBUTTONDOWN = 0x0201
 WM_LBUTTONUP = 0x202
 WM_MOUSEWHEEL = 0x020A
 WHEEL_DELTA = 120
+MOUSEEVENTF_MOVE = 0x0001;      #移动鼠标
+MOUSEEVENTF_LEFTDOWN = 0x0002; #模拟鼠标左键按下
+MOUSEEVENTF_LEFTUP = 0x0004; #模拟鼠标左键抬起
+MOUSEEVENTF_RIGHTDOWN = 0x0008;# 模拟鼠标右键按下
+MOUSEEVENTF_RIGHTUP = 0x0010; #模拟鼠标右键抬起
+MOUSEEVENTF_MIDDLEDOWN = 0x0020;# 模拟鼠标中键按下
+MOUSEEVENTF_MIDDLEUP = 0x0040; #模拟鼠标中键抬起
+MOUSEEVENTF_ABSOLUTE = 0x8000;# 标示是否采用绝对坐标
+
+#1920X1080的屏幕，对应于鼠标移动参数的换算
+MOVE_PERCENT_X=int(65550/1080)
+MOVE_PERCENT_Y=int(65530/1920)
+def move_to( x: int, y: int):
+    Mouse_Event(MOUSEEVENTF_MOVE|MOUSEEVENTF_ABSOLUTE, MOVE_PERCENT_X*x, MOVE_PERCENT_Y*y, 0, 0);
+    time.sleep(0.1)
 
 
-def move_to(handle: HWND, x: int, y: int):
-    """移动鼠标到坐标（x, y)
+def left_down():
+    Mouse_Event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    time.sleep(0.1)
+def left_up():
+    Mouse_Event(MOUSEEVENTF_LEFTUP|MOUSEEVENTF_ABSOLUTE, 0, 0, 0, 0);
+    time.sleep(0.1)
 
-    Args:
-        handle (HWND): 窗口句柄
-        x (int): 横坐标
-        y (int): 纵坐标
-    """
-    # https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mousemove
-    wparam = 0
-    lparam = y << 16 | x
-    PostMessageW(handle, WM_MOUSEMOVE, wparam, lparam)
+def right_down():
+    Mouse_Event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+    time.sleep(0.1)
+def right_up():
+    Mouse_Event(MOUSEEVENTF_RIGHTUP|MOUSEEVENTF_ABSOLUTE, 0, 0, 0, 0);
+    time.sleep(0.1)
 
-
-def left_down(handle: HWND, x: int, y: int):
-    """在坐标(x, y)按下鼠标左键
-
-    Args:
-        handle (HWND): 窗口句柄
-        x (int): 横坐标
-        y (int): 纵坐标
-    """
-    # https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-lbuttondown
-    wparam = 0
-    lparam = y << 16 | x
-    PostMessageW(handle, WM_LBUTTONDOWN, wparam, lparam)
-
-
-def left_up(handle: HWND, x: int, y: int):
-    """在坐标(x, y)放开鼠标左键
-
-    Args:
-        handle (HWND): 窗口句柄
-        x (int): 横坐标
-        y (int): 纵坐标
-    """
-    # https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-lbuttonup
-    wparam = 0
-    lparam = y << 16 | x
-    PostMessageW(handle, WM_LBUTTONUP, wparam, lparam)
-
-
-def scroll(handle: HWND, delta: int, x: int, y: int):
-    """在坐标(x, y)滚动鼠标滚轮
-
-    Args:
-        handle (HWND): 窗口句柄
-        delta (int): 为正向上滚动，为负向下滚动
-        x (int): 横坐标
-        y (int): 纵坐标
-    """
-    move_to(handle, x, y)
-    # https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mousewheel
-    wparam = delta << 16
-    p = POINT(x, y)
-    ClientToScreen(handle, byref(p))
-    lparam = p.y << 16 | p.x
-    PostMessageW(handle, WM_MOUSEWHEEL, wparam, lparam)
-
-
-def scroll_up(handle: HWND, x: int, y: int):
-    """在坐标(x, y)向上滚动鼠标滚轮
-
-    Args:
-        handle (HWND): 窗口句柄
-        x (int): 横坐标
-        y (int): 纵坐标
-    """
-    scroll(handle, WHEEL_DELTA, x, y)
-
-
-def scroll_down(handle: HWND, x: int, y: int):
-    """在坐标(x, y)向下滚动鼠标滚轮
-
-    Args:
-        handle (HWND): 窗口句柄
-        x (int): 横坐标
-        y (int): 纵坐标
-    """
-    scroll(handle, -WHEEL_DELTA, x, y)
-
+#鼠标右键的移动和点击
+def mouse_right_click( x: int, y: int):
+    move_to(x,y)
+    right_down()
+    right_up()
+#鼠标左键的移动和点击
+def mouse_left_click(x:int,y:int):
+    move_to(x,y)
+    left_down()
+    left_up()
 
 if __name__ == "__main__":
-    # 需要和目标窗口同一权限，游戏窗口通常是管理员权限
-    import sys
-    if not windll.shell32.IsUserAnAdmin():
-        # 不是管理员就提权
-        windll.shell32.ShellExecuteW(
-            None, "runas", sys.executable, __file__, None, 1)
-
-    import cv2
-    handle = windll.user32.FindWindowW(None, "一梦江湖")
-    # 点击线路
-    left_down(handle, 1234, 20)
-    time.sleep(0.1)
-    left_up(handle, 1234, 20)
-    time.sleep(1)
-    # 滚动线路列表
-    scroll_down(handle, 1000, 200)
+    mouse_left_click(2000,900)
