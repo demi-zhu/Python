@@ -2,8 +2,10 @@
 import serial
 import time
 import binascii
-
+from ctypes import c_ulong, windll, byref
+from ctypes.wintypes import HWND, POINT
 from serial.serialwin32 import Serial
+getMousePos=windll.user32.GetCursorPos
 portx = "COM5"
 bps = 115200
 timex = 5
@@ -103,22 +105,126 @@ def bytesTostr(data:bytes):
 #int.to_bytes函数是上面的逆过程
 
 #pyserial通过串口发送的数据类型能且仅能是bytes类型
-def keySend(key:str):
+def keySend(key:str,ser:Serial):
     ser.write(b'\x02\xf0\x03')
     virkey="%02x"%(VkCode[key])     #格式化输出，将VkCode[key]的值转换成2位的字符串(原本是int)
     ser.write(strTobytes(virkey))   #将字符串转换成bytes类型并通过串口输出
     ser.write(b'\x2e')
-def keyStringSend(key:str):         #不同字符之间用空格或者+连接
+def keyStringSend(key:str,time_s=0.001):         #不同字符之间用空格或者+连接
+    ser = serial.Serial(portx, bps, timeout=timex)
     time.sleep(0.05)
     if key.find('+')==-1:
         tmp=key.split()
     else:
         tmp=key.split('+')
     for item in tmp:
-        keySend(item)
-        time.sleep(0.001)
-if __name__ == "__main__":
-    ser = serial.Serial(portx, bps, timeout=timex)
-    keyStringSend("a+s+d+f+g+h+j+z+x+c+return")
+        keySend(item,ser)
+        time.sleep(time_s)
     ser.close()
+def mouseMovesend(x:int,y:int,time_s=0.1):
+    ser = serial.Serial(portx, bps, timeout=timex)
+    time.sleep(0.05)
+    po=POINT()
+    getMousePos(byref(po)) #获取当前鼠标位置
+    print("MOUSE_POS:",po.x,po.y)
+    if x-po.x>0:                #右移
+        result_x=divmod(x-po.x,127)
+        # print("result:",result_x[0],result_x[1])
+        for item in range(result_x[0]):
+            ser.write(b'\x02\xf0\x03')
+            ser.write(b'\x00\x7f\x00')
+            ser.write(b'\x2e')
+            time.sleep(time_s)
+        ser.write(b'\x02\xf0\x03')
+        ser.write(b'\x00')
+        if result_x[1]==46 or result_x[1]==21:#避免"!"."的冲突
+            result_x[1]=result_x[1]+1
+        remainder=strTobytes("%02x"%(result_x[1]))
+        # print("remainder:",remainder)
+        ser.write(remainder)
+        ser.write(b'\x00')
+        ser.write(b'\x2e')
+    elif x-po.x<0:              #左移
+        result_x=divmod(po.x-x,127)
+        # print("result:",result_x[0],result_x[1])
+        for item in range(result_x[0]):
+            ser.write(b'\x02\xf0\x03')
+            ser.write(b'\x00\x81\x00')
+            ser.write(b'\x2e')
+            time.sleep(time_s)
+        ser.write(b'\x02\xf0\x03')
+        ser.write(b'\x00')
+        if result_x[1]==46 or result_x[1]==21:#避免"!"."的冲突
+            result_x[1]=result_x[1]+1
+        complement=(bin(-result_x[1]&0xff).replace("0b",""))    #计算补码
+        # print("compelent:",complement)
+        hex_str="%02x"%(int(complement,2))                      #转换成十六进制字符串
+        # print("hex_str:",hex_str)
+        hex_b=strTobytes(hex_str)                               #转换成字节发送
+        # print("hex_b:",hex_b)
+        ser.write(hex_b)
+        ser.write(b'\x00')
+        ser.write(b'\x2e')
+
+    if y-po.y>0:                #下移
+        result_y=divmod(y-po.y,127)
+        print("result:",result_y[0],result_y[1])
+        for item in range(result_y[0]):
+            ser.write(b'\x02\xf0\x03')
+            ser.write(b'\x00\x00\x7f')
+            ser.write(b'\x2e')
+            time.sleep(time_s)
+        ser.write(b'\x02\xf0\x03')
+        ser.write(b'\x00\x00')
+        if result_y[1]==46 or result_y[1]==21:#避免"!"."的冲突
+            result_y[1]=result_y[1]+1
+        remainder=strTobytes("%02x"%(result_y[1]))
+        print("remainder:",remainder)
+        ser.write(remainder)
+        ser.write(b'\x2e')
+    elif y-po.y<0:              #上移
+        result_y=divmod(po.y-y,127)
+        print("result:",result_y[0],result_y[1])
+        for item in range(result_y[0]):
+            ser.write(b'\x02\xf0\x03')
+            ser.write(b'\x00\x00\x81')
+            ser.write(b'\x2e')
+            time.sleep(time_s)
+        ser.write(b'\x02\xf0\x03')
+        ser.write(b'\x00\x00')
+        if result_y[1]==46 or result_y[1]==21:#避免"!"."的冲突
+            result_y[1]=result_y[1]+1
+        complement=(bin(-result_y[1]&0xff).replace("0b",""))    #计算补码
+        print("compelent:",complement)
+        hex_str="%02x"%(int(complement,2))                      #转换成十六进制字符串
+        print("hex_str:",hex_str)
+        hex_b=strTobytes(hex_str)                               #转换成字节发送
+        print("hex_b:",hex_b)
+        ser.write(hex_b)
+        ser.write(b'\x2e')
+    ser.close()
+def mouseLeftclick():
+    ser = serial.Serial(portx, bps, timeout=timex)
+    time.sleep(0.1)
+    ser.write(b'\x02\xf0\x03')
+    ser.write(b'\x01\x00\x00')
+    ser.write(b'\x2e')
+    time.sleep(0.05)
+    ser.write(b'\x02\xf0\x03')
+    ser.write(b'\x00\x00\x00')
+    time.sleep(0.05)
+    ser.write(b'\x2e')
+def mouseRightclick():
+    ser = serial.Serial(portx, bps, timeout=timex)
+    time.sleep(0.1)
+    ser.write(b'\x02\xf0\x03')
+    ser.write(b'\x06\x00\x00')
+    ser.write(b'\x2e')
+    time.sleep(0.05)
+    ser.write(b'\x02\xf0\x03')
+    ser.write(b'\x00\x00\x00')
+    time.sleep(0.05)
+    ser.write(b'\x2e')
+if __name__ == "__main__":
+    mouseRightclick()
 
