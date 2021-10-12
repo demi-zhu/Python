@@ -129,7 +129,7 @@ def mouseMovesend(x:int,y:int,time_s=0.1):
     print("MOUSE_POS:",po.x,po.y)
     if x-po.x>0:                #右移
         result_x=divmod(x-po.x,127)
-        # print("result:",result_x[0],result_x[1])
+        print("右移-result:",result_x[0],result_x[1])
         for item in range(result_x[0]):
             ser.write(b'\x02\xf0\x03')
             ser.write(b'\x00\x7f\x00')
@@ -138,15 +138,17 @@ def mouseMovesend(x:int,y:int,time_s=0.1):
         ser.write(b'\x02\xf0\x03')
         ser.write(b'\x00')
         if result_x[1]==46 or result_x[1]==21:#避免"!"."的冲突
-            result_x[1]=result_x[1]+1
-        remainder=strTobytes("%02x"%(result_x[1]))
+            remainder=strTobytes("%02x"%(result_x[1]+1))
+        else:
+            remainder=strTobytes("%02x"%(result_x[1]))
         # print("remainder:",remainder)
         ser.write(remainder)
         ser.write(b'\x00')
         ser.write(b'\x2e')
+        time.sleep(0.1)
     elif x-po.x<0:              #左移
         result_x=divmod(po.x-x,127)
-        # print("result:",result_x[0],result_x[1])
+        print("左移-result:",result_x[0],result_x[1])
         for item in range(result_x[0]):
             ser.write(b'\x02\xf0\x03')
             ser.write(b'\x00\x81\x00')
@@ -155,8 +157,9 @@ def mouseMovesend(x:int,y:int,time_s=0.1):
         ser.write(b'\x02\xf0\x03')
         ser.write(b'\x00')
         if result_x[1]==46 or result_x[1]==21:#避免"!"."的冲突
-            result_x[1]=result_x[1]+1
-        complement=(bin(-result_x[1]&0xff).replace("0b",""))    #计算补码
+            complement=(bin(-(result_x[1]+1)&0xff).replace("0b",""))    #计算补码
+        else:
+            complement=(bin(-result_x[1]&0xff).replace("0b",""))
         # print("compelent:",complement)
         hex_str="%02x"%(int(complement,2))                      #转换成十六进制字符串
         # print("hex_str:",hex_str)
@@ -165,10 +168,10 @@ def mouseMovesend(x:int,y:int,time_s=0.1):
         ser.write(hex_b)
         ser.write(b'\x00')
         ser.write(b'\x2e')
-
+        time.sleep(0.1)
     if y-po.y>0:                #下移
         result_y=divmod(y-po.y,127)
-        print("result:",result_y[0],result_y[1])
+        print("下移-result:",result_y[0],result_y[1])
         for item in range(result_y[0]):
             ser.write(b'\x02\xf0\x03')
             ser.write(b'\x00\x00\x7f')
@@ -177,14 +180,16 @@ def mouseMovesend(x:int,y:int,time_s=0.1):
         ser.write(b'\x02\xf0\x03')
         ser.write(b'\x00\x00')
         if result_y[1]==46 or result_y[1]==21:#避免"!"."的冲突
-            result_y[1]=result_y[1]+1
-        remainder=strTobytes("%02x"%(result_y[1]))
-        print("remainder:",remainder)
+            remainder=strTobytes("%02x"%(result_y[1]+1))
+        else:
+            remainder=strTobytes("%02x"%(result_y[1]))
+        # print("remainder:",remainder)
         ser.write(remainder)
         ser.write(b'\x2e')
+        time.sleep(0.1)
     elif y-po.y<0:              #上移
         result_y=divmod(po.y-y,127)
-        print("result:",result_y[0],result_y[1])
+        print("上移-result:",result_y[0],result_y[1])
         for item in range(result_y[0]):
             ser.write(b'\x02\xf0\x03')
             ser.write(b'\x00\x00\x81')
@@ -193,15 +198,17 @@ def mouseMovesend(x:int,y:int,time_s=0.1):
         ser.write(b'\x02\xf0\x03')
         ser.write(b'\x00\x00')
         if result_y[1]==46 or result_y[1]==21:#避免"!"."的冲突
-            result_y[1]=result_y[1]+1
-        complement=(bin(-result_y[1]&0xff).replace("0b",""))    #计算补码
-        print("compelent:",complement)
+            complement=(bin(-(result_y[1]+1)&0xff).replace("0b",""))    #计算补码
+        else:
+            complement=(bin(-result_y[1]&0xff).replace("0b",""))
+        # print("compelent:",complement)
         hex_str="%02x"%(int(complement,2))                      #转换成十六进制字符串
-        print("hex_str:",hex_str)
+        # print("hex_str:",hex_str)
         hex_b=strTobytes(hex_str)                               #转换成字节发送
-        print("hex_b:",hex_b)
+        # print("hex_b:",hex_b)
         ser.write(hex_b)
         ser.write(b'\x2e')
+        time.sleep(0.1)
     ser.close()
 def mouseLeftclick():
     ser = serial.Serial(portx, bps, timeout=timex)
@@ -226,5 +233,13 @@ def mouseRightclick():
     time.sleep(0.05)
     ser.write(b'\x2e')
 if __name__ == "__main__":
-    mouseRightclick()
+    while True:
+        mouseMovesend(300,100)
+        time.sleep(1)
+        mouseMovesend(310,100)
+        time.sleep(1)
+        mouseMovesend(310,110)
+        time.sleep(1)
+        mouseMovesend(300,110)
+        time.sleep(1)
 
