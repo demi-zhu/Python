@@ -46,14 +46,15 @@ class Demo:
     #     self.op.Sleep(1000);
     #     return 0;
 
-    # def test_bkimage(self):
-    #     cr=self.op.GetColor(30,30);
-    #     print("color of (30,30):",cr);
-    #     ret=self.op.Capture(0,0,2000,2000,"screen.bmp");
-    #     print("op.Capture ret:",ret);
-    #     r,x,y=self.op.FindPic(0,0,100,100,"test.png","000000",1.0,0);
-    #     print("op.FindPic:",r,x,y);
-    #     return 0;
+    def test_bkimage(self):
+        # cr=self.op.GetColor(30,30);
+        # print("color of (30,30):",cr);
+        # ret=self.op.Capture(0,0,2000,2000,"screen.bmp");
+        # print("op.Capture ret:",ret);
+        r,x,y=self.op.FindPic(1,1,2222,1444,"345.bmp","000000",0.6,0);
+        self.op.MoveTo(x+22,y+22);
+        print("op.FindPic:",r,x,y);
+        return 0;
 
     def test_ocr(self):
         #ocr-设置字库
@@ -61,7 +62,7 @@ class Demo:
         print("SetDict:",r);
         # s=self.op.OcrAuto(0,0,1000,1000,0.8);
         # print("ocr:",s);
-        s=self.op.OcrEx(1,1,1111,1111,"cf222e-333333",1.0)
+        s=self.op.OcrEx(1,1,1111,1111,"0969da-222222",1.0)
         print("OcrEx:",s);
         # s=self.op.OcrAuto(0,0,1000,1000,1.0);
         # print("OcrAutoFromFile:",s);
@@ -77,7 +78,7 @@ def test_all():
     # if demo.test_bkmode() == 0:
     #     return 0;
     # demo.test_bkmouse_bkkeypad();
-    # demo.test_bkimage();
+    demo.test_bkimage();
     demo.test_ocr();
     demo.test_clear();
 

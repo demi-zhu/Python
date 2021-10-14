@@ -4,7 +4,7 @@ from ctypes import windll, byref, c_ubyte
 from ctypes.wintypes import RECT, HWND
 import numpy as np
 import time
-import mouse as mouse
+# import mouse as mouse
 GetDC = windll.user32.GetDC
 CreateCompatibleDC = windll.gdi32.CreateCompatibleDC
 GetClientRect = windll.user32.GetClientRect
@@ -51,13 +51,13 @@ def capture(handle: HWND):
 
 if __name__ == "__main__":
     import cv2
-    handle = windll.user32.FindWindowW(None, "Audacity")
+    handle = windll.user32.FindWindowW(None, "dnf怪物_百度图片搜索")
     # 截图时要保证游戏窗口的客户区大小是1334×750
     image = capture(handle)
     # 转为灰度图
     gray = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
     # 读取图片，并保留Alpha通道,若要排除背景干扰，需要将源对比图背景设置成透明的，即Alpha通道置为0.
-    template = cv2.imread('34.png', cv2.IMREAD_UNCHANGED)
+    template = cv2.imread('234.bmp', cv2.IMREAD_UNCHANGED)
     # 转为灰度图
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGRA2GRAY)
     # 取出Alpha通道

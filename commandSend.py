@@ -124,6 +124,9 @@ def keyStringSend(key:str,time_s=0.001):         #不同字符之间用空格或
 def mouseMovesend(x:int,y:int,time_s=0.1):
     ser = serial.Serial(portx, bps, timeout=timex)
     time.sleep(0.05)
+    # x=int(x/1.52)
+    # y=int(y/1.65)
+    print("换算x:",x)
     po=POINT()
     getMousePos(byref(po)) #获取当前鼠标位置
     print("MOUSE_POS:",po.x,po.y)
@@ -233,13 +236,5 @@ def mouseRightclick():
     time.sleep(0.05)
     ser.write(b'\x2e')
 if __name__ == "__main__":
-    while True:
-        mouseMovesend(300,100)
-        time.sleep(1)
-        mouseMovesend(310,100)
-        time.sleep(1)
-        mouseMovesend(310,110)
-        time.sleep(1)
-        mouseMovesend(300,110)
-        time.sleep(1)
+    mouseMovesend(1,0)
 
